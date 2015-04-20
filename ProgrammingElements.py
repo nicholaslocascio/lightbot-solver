@@ -1,5 +1,5 @@
 import hashlib
-from Game import GameMap
+import Game
 
 class Element(object):
     def transform(self, game_map):
@@ -20,27 +20,36 @@ class Operation(object):
     def __repr__(self):
         return self.__str__()
 
+    def transform(self, game_map):
+        raise NotImplementedError
+
 
 class CommandOperation(Operation):
     def __init__(self, operation):
+        if not isinstance(operation, basestring):
+            raise Exception("Sub operations must be primitive strings")
         self.operation = operation
 
     def __str__(self):
-        return "(" + str(self.operation) + ")"
+        return str(self.operation)
 
     @staticmethod
     def command_array_from_path_string_array(path):
         return [CommandOperation(p) for p in path]
 
     def transform(self, game_map):
-        transform_function = GameMap.tranform_function_from_transformation(self.operation)
+        transform_function = Game.GameMap.tranform_function_from_transformation(self)
         return transform_function(game_map)
 
 class Program(object):
     def __init__(self, operations):
-        self.operations = operations
+        self.operations = []
+        for operation in operations:
+            self.add_operation(operation)
 
     def add_operation(self, operation):
+        if isinstance(operation, Function):
+            operation = FunctionCallOperation(FunctionCall(operation, 1))
         if not isinstance(operation, Operation):
             raise Exception("Must add Operation")
         elif isinstance(operation, CommandOperation):
@@ -48,7 +57,7 @@ class Program(object):
         elif isinstance(operation, FunctionCallOperation):
             if len(self.operations) > 0:
                 last_operation = self.operations[-1]
-                if last_operation is operation:
+                if isinstance(operation, FunctionCallOperation) and isinstance(last_operation, FunctionCallOperation) and str(last_operation.function_call.function) == str(operation.function_call.function):
                     last_operation.increase_call_count()
                 else:
                     self.operations.append(operation)
@@ -66,12 +75,16 @@ class Program(object):
         for function in functions:
             out += function.get_unique_id() + " : "
             out += str(function)
-
-
         return out
 
     def __repr__(self):
         return self.__str__()
+
+    def __len__(self):
+        return len(self.operations)
+
+    def __getitem__(self, i):
+        return self.operations[i]
 
     def cost(self):
         cost_sum = 0
@@ -83,6 +96,7 @@ class Program(object):
                 cost_sum += 1
                 if str(operation) not in counted_functions:
                     cost_sum += operation.num_sub_operations()
+                    cost_sum += 0.01 * operation.function_call.num_calls
                     counted_functions.add(str(operation))
         return cost_sum
 
@@ -119,6 +133,9 @@ class Function(object):
     def __repr__(self):
         return self.__str__()
 
+    def __len__(self):
+        return len(self.operations)
+
     def get_unique_id(self):
         hash_object = hashlib.md5(str(self.operations))
         unique_id = "F_" + hash_object.hexdigest()[0:4]
@@ -128,6 +145,9 @@ class Function(object):
         for operation in self.operations:
             game_map = operation.transform(game_map)
         return game_map
+
+    def __hash__(self):
+        return hash(str(self))
 
 
 class FunctionCall(object):

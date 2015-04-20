@@ -1,6 +1,7 @@
 """Define Map Class"""
 
 import copy
+import ProgrammingElements
 
 class GameMap(object):
     """Map"""
@@ -82,8 +83,21 @@ class GameMap(object):
 
     @staticmethod
     def transform_map_go_forward(game_map):
-        game_map.robot.go_forward()
+        x0, y0 = game_map.robot.coordinates()
+        dx, dy = game_map.robot.get_direction_vector()
+        x = x0 + dx
+        y = y0 + dy
+        if x < 0 or x >= game_map.width or y < 0 or y >= game_map.height:
+            x = x0
+            y = y0
+        else:
+            cell = game_map.get_cell(x, y)
+            if cell.feature is "-":
+                x = x0
+                y = y0
+        game_map.robot.set_coordinates(x, y)
         return game_map
+
 
     @staticmethod
     def transform_map_activate(game_map):
@@ -123,38 +137,36 @@ class GameMap(object):
             return 'f'
 
     @staticmethod
-    def tranform_function_from_transformation(transformation_char):
+    def tranform_function_from_transformation(transformation):
+        transformation_char = transformation.operation
         if transformation_char is 'l':
             return GameMap.transform_map_turn_cc
         elif transformation_char is 'r':
             return GameMap.transform_map_turn_c
         elif transformation_char is 'a':
             return GameMap.transform_map_activate
-        elif transformation_char is 'f':
+        elif transformation_char == 'f':
             return GameMap.transform_map_go_forward
+        else:
+            raise Exception("Invalid Tranformation Char", str(transformation_char))
 
-    def get_neighbor_maps_and_transformations(self, additional_function=None):
-        valid_transform_functions = [\
-        GameMap.transform_map_turn_cc, 
-        GameMap.transform_map_turn_c,
-        GameMap.transform_map_go_forward,
-        GameMap.transform_map_activate]
-        neighbor_maps = []
-        transformations = []
-        for transform in valid_transform_functions:
-            new_map = copy.copy(self)
-            new_map = transform(new_map)
-            transformation = GameMap.tranformation_from_tranform_function(transform)
-            if GameMap.is_valid_map(new_map):
-                neighbor_maps.append(new_map)
-                transformations.append(transformation)
+    def get_neighbor_maps_and_operations(self, additional_function=None):
+        valid_transform_operations = [\
+        ProgrammingElements.CommandOperation('l'),
+        ProgrammingElements.CommandOperation('r'),
+        ProgrammingElements.CommandOperation('f'),
+        ProgrammingElements.CommandOperation('a')]
         if additional_function:
+            valid_transform_operations.insert(0, additional_function)
+        neighbor_maps = []
+        operations = []
+        for operation in valid_transform_operations:
             new_map = copy.copy(self)
-            new_map = additional_function.transform(new_map)
+            new_map = operation.transform(new_map)
             if GameMap.is_valid_map(new_map):
                 neighbor_maps.append(new_map)
-                transformations.append(additional_function)
-        return neighbor_maps, transformations
+                operations.append(operation)
+        return neighbor_maps, operations
 
 class Cell(object):
     """Cell"""
@@ -214,6 +226,10 @@ class Robot(object):
     def coordinates(self):
         return (self.x, self.y)
 
+    def set_coordinates(self, x, y):
+        self.x = x
+        self.y = y
+
     def turn_clockwise(self):
         self.orientation = (self.orientation-90)%360
 
@@ -230,12 +246,6 @@ class Robot(object):
         elif self.orientation == 270:
             return [0, 1]
         raise Exception('Invalid Orientation: ' + str(self.orientation))
-
-
-    def go_forward(self):
-        direction = self.get_direction_vector()
-        self.x += direction[0]
-        self.y += direction[1]
 
     @staticmethod
     def robot_from_string(featureString):

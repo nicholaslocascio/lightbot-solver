@@ -51,3 +51,33 @@ class GameMapExamples(object):
 """
 
         return Game.GameMap.game_map_from_strings(topography, features, robot_features)
+
+
+    @staticmethod
+    def example3():
+        topography = \
+"""\
+11111
+----1
+----1
+----1
+11111\
+"""
+        features = \
+"""\
+lxlxl
+----x
+----l
+----x
+xxlxl\
+"""
+        robot_features = \
+"""\
+xxxxx
+----x
+----x
+----x
+Exxxx\
+"""
+
+        return Game.GameMap.game_map_from_strings(topography, features, robot_features)
