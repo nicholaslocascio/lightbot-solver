@@ -12,9 +12,9 @@ class GameMapExamples(object):
 """
         features = \
 """\
--x-
 -l-
--x-
+-l-
+-l-
 -l-\
 """
         robot_features = \

@@ -16,24 +16,22 @@ class GameMapSearchNode(object):
         path.reverse()
         return path
 
-def search(game_map):
+def search(game_map, additional_function=None):
     start_node = GameMapSearchNode(game_map, None, None)
     agenda = [start_node]
     seen = set()
     depth = 0
     while agenda:
         depth += 1
-        if depth > 2000:
-            a = 5/0
+        if depth > 4000:
+            raise Exception('Search depth limit reached')
         node = agenda.pop(0)
         game_map = node.game_map
         game_map_str = game_map.__str__()
         seen.add(game_map_str)
-        print 'Next: \n'
-        print game_map_str
         if game_map.check_if_solved():
             return node.get_tranformation_path()
-        neighbor_maps, transformations = game_map.get_neighbor_maps_and_transformations()
+        neighbor_maps, transformations = game_map.get_neighbor_maps_and_transformations(additional_function)
         for neighbor_map, transformation in zip(neighbor_maps, transformations):
             neighbor_node = GameMapSearchNode(neighbor_map, transformation, node)
             neighbor_map_str = neighbor_map.__str__()

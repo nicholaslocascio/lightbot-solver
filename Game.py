@@ -97,7 +97,6 @@ class GameMap(object):
 
     def check_if_solved(self):
         for pos, cell in self.cells.iteritems():
-            #print "feat ", cell.feature
             if cell.feature is 'l':
                 return False
         return True
@@ -123,7 +122,18 @@ class GameMap(object):
         elif transform is GameMap.transform_map_go_forward:
             return 'f'
 
-    def get_neighbor_maps_and_transformations(self):
+    @staticmethod
+    def tranform_function_from_transformation(transformation_char):
+        if transformation_char is 'l':
+            return GameMap.transform_map_turn_cc
+        elif transformation_char is 'r':
+            return GameMap.transform_map_turn_c
+        elif transformation_char is 'a':
+            return GameMap.transform_map_activate
+        elif transformation_char is 'f':
+            return GameMap.transform_map_go_forward
+
+    def get_neighbor_maps_and_transformations(self, additional_function=None):
         valid_transform_functions = [\
         GameMap.transform_map_turn_cc, 
         GameMap.transform_map_turn_c,
@@ -138,6 +148,12 @@ class GameMap(object):
             if GameMap.is_valid_map(new_map):
                 neighbor_maps.append(new_map)
                 transformations.append(transformation)
+        if additional_function:
+            new_map = copy.copy(self)
+            new_map = additional_function.transform(new_map)
+            if GameMap.is_valid_map(new_map):
+                neighbor_maps.append(new_map)
+                transformations.append(additional_function)
         return neighbor_maps, transformations
 
 class Cell(object):

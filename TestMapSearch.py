@@ -2,8 +2,7 @@ import Game
 import GameMapExamples
 import Search
 def mapSearchTest():
-    game = GameMapExamples.GameMapExamples.example2()
-    #print game
+    game = GameMapExamples.GameMapExamples.example1()
     path = Search.search(game)
     return path
 
