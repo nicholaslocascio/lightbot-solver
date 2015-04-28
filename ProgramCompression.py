@@ -2,6 +2,8 @@
 
 from ProgrammingElements import Function, Program, CommandOperation, FunctionCallOperation, FunctionCall
 import Search
+import itertools
+from ProgramConstraints import FunctionConstraint
 
 def get_all_programs_compressions(full_program):
     path = full_program
@@ -25,7 +27,6 @@ def get_all_potential_functions(full_program):
             if str(function) not in function_set:
                 function_set.add(str(function))
                 functions.add(function)
-    print functions
     return list(functions)
 
 def get_top_potential_functions(full_program):
@@ -51,8 +52,14 @@ def get_top_potential_functions(full_program):
         all_best_functions = all_best_functions + value
     return all_best_functions
 
-def filter_functions_with_constraint(constraint):
-    pass
+def get_functions_fitting_constraints(functions, program_constraints):
+    num_funcs = program_constraints.num_functions
+    all_perms = itertools.permutations(functions, num_funcs)
+    fitting_function_pairs = \
+    [function_tuple for function_tuple in all_perms \
+    if FunctionConstraint.do_functions_fit_constraints( \
+        function_tuple, program_constraints.function_constraints)]
+    return fitting_function_pairs
 
 def get_num_times_function_appears_in_full_program(function, full_program):
     count = 0
@@ -70,15 +77,38 @@ def get_all_programs_with_function_base(game_map, functions):
     programs = []
     for function in functions:
         function_call_operation = FunctionCallOperation(FunctionCall(function, 1))
-        path = Search.search(game_map, function_call_operation)
+        path = Search.search(game_map, [function_call_operation])
         program = Program(path)
         programs.append(program)
     return programs
 
+def get_best_program_with_function_tuples_base(game_map, function_tuples, main_limit=float('inf')):
+    best_cost = float('inf')
+    best_program = None
+    for function_tuple in function_tuples:
+        function_tuple_operations = []
+        for function in function_tuple:
+            function_call_operation = FunctionCallOperation(FunctionCall(function, 1))
+            function_tuple_operations.append(function_call_operation)
+        print "best_cost", best_cost
+        program = Search.search(game_map, function_tuple_operations, best_cost, main_limit)
+        if program:
+            program_cost = program.cost()
+            if program_cost < best_cost:
+                best_program = program
+                best_cost = program_cost
+    return best_program
+
 def get_best_program_with_search(game_map, full_program):
     functions = get_top_potential_functions(full_program)
-    programs = get_all_programs_with_function_base(game_map, functions)
-    best = min(programs, key=lambda program: program.cost())
+    functions = [[function] for function in functions]
+    best = get_best_program_with_function_tuples_base(game_map, functions)
+    return best
+
+def get_best_program_with_search_and_constraints(game_map, full_program, program_constraints):
+    functions = get_top_potential_functions(full_program)
+    function_tuples = get_functions_fitting_constraints(functions, program_constraints)
+    best = get_best_program_with_function_tuples_base(game_map, function_tuples, program_constraints.main_length_limit)
     return best
 
 def make_program_from_full_program_and_function(full_program, function):

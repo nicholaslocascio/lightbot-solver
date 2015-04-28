@@ -66,6 +66,20 @@ class GameMap(object):
     def get_cell(self, x, y):
         return self.cells[x, y]
 
+    def get_heuristic_cost(self):
+        num_activated = 0
+        num_not_activated = 0
+        for x in range(0, self.width):
+            for y in range(0, self.height):
+                cell = self.get_cell(x, y)
+                if cell.feature is "L":
+                    num_activated += 1
+                if cell.feature is "l":
+                    num_not_activated += 1
+        total_lights = num_activated + num_not_activated
+        h = (num_not_activated*1.0)/total_lights
+        return h
+
     def __copy__(self):
         new_cells = copy.deepcopy(self.cells)
         new_robot = copy.copy(self.robot)
@@ -150,14 +164,14 @@ class GameMap(object):
         else:
             raise Exception("Invalid Tranformation Char", str(transformation_char))
 
-    def get_neighbor_maps_and_operations(self, additional_function=None):
+    def get_neighbor_maps_and_operations(self, additional_functions=None):
         valid_transform_operations = [\
         ProgrammingElements.CommandOperation('l'),
         ProgrammingElements.CommandOperation('r'),
         ProgrammingElements.CommandOperation('f'),
         ProgrammingElements.CommandOperation('a')]
-        if additional_function:
-            valid_transform_operations.insert(0, additional_function)
+        if additional_functions:
+            valid_transform_operations =  valid_transform_operations + additional_functions
         neighbor_maps = []
         operations = []
         for operation in valid_transform_operations:

@@ -23,6 +23,9 @@ class Operation(object):
     def transform(self, game_map):
         raise NotImplementedError
 
+    def __copy__(self):
+        raise NotImplementedError
+
 
 class CommandOperation(Operation):
     def __init__(self, operation):
@@ -41,13 +44,21 @@ class CommandOperation(Operation):
         transform_function = Game.GameMap.tranform_function_from_transformation(self)
         return transform_function(game_map)
 
-class Program(object):
-    def __init__(self, operations):
-        self.operations = []
-        for operation in operations:
-            self.add_operation(operation)
+    def __copy__(self):
+        return CommandOperation(self.operation)
 
-    def add_operation(self, operation):
+class Program(object):
+    """ fe"""
+    def __init__(self, operations, do_reduction=True):
+        if do_reduction:
+            self.operations = []
+            for operation in operations:
+                self.add_operation(operation)
+        else:
+            self.operations = operations
+
+    def add_operation(self, oper):
+        operation = oper.__copy__()
         if isinstance(operation, Function):
             operation = FunctionCallOperation(FunctionCall(operation, 1))
         if not isinstance(operation, Operation):
@@ -86,18 +97,18 @@ class Program(object):
     def __getitem__(self, i):
         return self.operations[i]
 
+    def length_of_main(self):
+        return len(self.operations)
+
     def cost(self):
         cost_sum = 0
-        counted_functions = set()
         for operation in self.operations:
             if isinstance(operation, CommandOperation):
                 cost_sum += 1
             elif isinstance(operation, FunctionCallOperation):
                 cost_sum += 1
-                if str(operation) not in counted_functions:
-                    cost_sum += operation.num_sub_operations()
-                    cost_sum += 0.01 * operation.function_call.num_calls
-                    counted_functions.add(str(operation))
+                cost_sum += operation.num_sub_operations()
+                cost_sum += 0.2 * operation.function_call.num_calls
         return cost_sum
 
     def run_program_on_game(self, game):
@@ -155,10 +166,14 @@ class FunctionCall(object):
         self.function = function
         self.num_calls = num_calls
 
+    def __copy__(self):
+        return FunctionCall(self.function, self.num_calls)
+
 class FunctionCallOperation(Operation):
-    def __init__(self, function_call):
+    def __init__(self, function_call, recurses=False):
         super(FunctionCallOperation, self).__init__(function_call)
         self.function_call = function_call
+        self.recurses = recurses
 
     def __str__(self):
         unique_id = self.function_call.function.get_unique_id()
@@ -166,7 +181,10 @@ class FunctionCallOperation(Operation):
         return out
 
     def num_sub_operations(self):
-        return self.function_call.function.num_sub_operations()
+        sub_ops_count = self.function_call.function.num_sub_operations()
+        if self.recurses:
+            sub_ops_count += 1
+        return sub_ops_count
 
     def increase_call_count(self):
         self.operation.num_calls += 1
@@ -175,3 +193,7 @@ class FunctionCallOperation(Operation):
         for i in range(0, self.function_call.num_calls):
             game_map = self.function_call.function.transform(game_map)
         return game_map
+
+    def __copy__(self):
+        f = FunctionCallOperation(self.function_call.__copy__())
+        return f
