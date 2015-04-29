@@ -86,6 +86,7 @@ class Program(object):
         for function in functions:
             out += function.get_unique_id() + " : "
             out += str(function)
+            out += "\n"
         return out
 
     def __repr__(self):
@@ -97,17 +98,29 @@ class Program(object):
     def __getitem__(self, i):
         return self.operations[i]
 
+    def num_function_calls_above_one(self):
+        count = 0
+        for operation in self.operations:
+            if isinstance(operation, FunctionCallOperation):
+                num_calls = operation.function_call.num_calls
+                if num_calls > 1:
+                    count += num_calls - 1
+        return count
+
     def length_of_main(self):
-        return len(self.operations)
+        return len(self.operations) + self.num_function_calls_above_one()
 
     def cost(self):
-        cost_sum = 0
+        cost_sum = 0.0
+        counted_functions = set()
         for operation in self.operations:
             if isinstance(operation, CommandOperation):
                 cost_sum += 1
             elif isinstance(operation, FunctionCallOperation):
                 cost_sum += 1
-                cost_sum += operation.num_sub_operations()
+                if str(operation) not in counted_functions:
+                    cost_sum += operation.num_sub_operations()
+                    counted_functions.add(str(operation))
                 cost_sum += 0.2 * operation.function_call.num_calls
         return cost_sum
 

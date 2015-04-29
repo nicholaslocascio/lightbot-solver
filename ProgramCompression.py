@@ -10,7 +10,7 @@ def get_all_programs_compressions(full_program):
     programs = []
     functions = get_top_potential_functions(full_program)
     for function in functions:
-        for start in range(0, len(path)-1):
+        for start in range(0, len(path)):
             new_program = make_program_from_full_program_and_function(path, function)
             programs.append(new_program)
     return programs
@@ -19,10 +19,12 @@ def get_all_potential_functions(full_program):
     path = full_program
     functions = set()
     function_set = set()
-    for window_size in range(2, len(path)/2):
-        for start in range(0, len(path)-window_size):
+    for window_size in range(2, len(path)):
+        for start in range(0, len(path)-window_size+1):
             end = start + window_size
             commands = path[start:end]
+            if end == 14:
+                print commands
             function = Function(commands)
             if str(function) not in function_set:
                 function_set.add(str(function))
@@ -64,7 +66,7 @@ def get_functions_fitting_constraints(functions, program_constraints):
 def get_num_times_function_appears_in_full_program(function, full_program):
     count = 0
     window_size = len(function)
-    for start in range(0, len(full_program)-window_size):
+    for start in range(0, len(full_program)-window_size+1):
         end = start + window_size
         commands = full_program[start:end]
         f = Function(commands)
@@ -90,7 +92,6 @@ def get_best_program_with_function_tuples_base(game_map, function_tuples, main_l
         for function in function_tuple:
             function_call_operation = FunctionCallOperation(FunctionCall(function, 1))
             function_tuple_operations.append(function_call_operation)
-        print "best_cost", best_cost
         program = Search.search(game_map, function_tuple_operations, best_cost, main_limit)
         if program:
             program_cost = program.cost()

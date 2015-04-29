@@ -14,6 +14,9 @@ class ProgramConstraints(object):
 
         return FunctionConstraint.do_functions_fit_constraints(program.functions, self.function_constraints)
 
+class NullConstraints(ProgramConstraints):
+    pass
+
 class FunctionConstraint(object):
     def __init__(self, length_of_function):
         self.length_of_function = length_of_function

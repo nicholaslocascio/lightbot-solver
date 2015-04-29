@@ -39,10 +39,13 @@ def test_game_map_compression_with_search():
     print "Running program on Map: \n Result: " + str(result)
 
 def test_game_map_compression_with_search_and_constraints():
-    game = GameMapExamples.GameMapExamples.example3()
+    program_constraints = ProgramConstraints.ProgramConstraints([ProgramConstraints.FunctionConstraint(10), ProgramConstraints.FunctionConstraint(5)], 1)
+    test_game_map_compression_with_search_and_constraints_provided(program_constraints)
+
+def test_game_map_compression_with_search_and_constraints_provided(program_constraints):
+    game = GameMapExamples.GameMapExamples.example4()
     path = Search.search(game)
     full_program = ProgrammingElements.Program(path)
-    program_constraints = ProgramConstraints.ProgramConstraints([ProgramConstraints.FunctionConstraint(10), ProgramConstraints.FunctionConstraint(5)], 1)
     program = ProgramCompression.get_best_program_with_search_and_constraints(game, full_program, program_constraints)
     print "Program is: "
     print program
@@ -52,6 +55,8 @@ def test_game_map_compression_with_search_and_constraints():
     print "Running program on Map: \n Result: " + str(result)
 
 
+program_constraints = ProgramConstraints.ProgramConstraints([ProgramConstraints.FunctionConstraint(8), ProgramConstraints.FunctionConstraint(6)], 2)
+test_game_map_compression_with_search_and_constraints_provided(program_constraints)
 #test_game_map_solving_and_compression()
 #test_game_map_compression_with_search()
-test_game_map_compression_with_search_and_constraints()
+#test_game_map_compression_with_search_and_constraints()

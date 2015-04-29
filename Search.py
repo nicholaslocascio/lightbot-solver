@@ -28,9 +28,9 @@ def search(game_map, additional_functions=None, cost_limit=float('inf'), main_li
     depth = 0
     while agenda and not agenda.empty():
         depth += 1
-        if depth > 4000:
-            raise Exception('Search depth limit reached')
         cost, node = agenda.get()
+        if depth > 40000:
+            raise Exception('Search depth limit reached')
         if node.program.length_of_main() > main_limit:
             continue
         if node.program.cost() > cost_limit:
@@ -43,6 +43,7 @@ def search(game_map, additional_functions=None, cost_limit=float('inf'), main_li
             print "Nodes expanded:" +  str(depth)
             print cost
             print program
+            print node.game_map
             return node.program
         neighbor_maps, operations = game_map.get_neighbor_maps_and_operations(additional_functions)
         for neighbor_map, operation in zip(neighbor_maps, operations):
